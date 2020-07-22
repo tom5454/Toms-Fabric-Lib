@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.tom.fabriclibs.registry.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  	"RegistryMixin",
+  	"BlockMixin",
+  	"ItemMixin",
+  	"BlockEntityTypeMixin",
+  	"EnchMixin",
+  	"SoundEventMixin",
+  	"PotionMixin",
+  	"StatusEffectMixin",
+  	"EntityTypeMixin",
+  	"BiomeMixin",
+  	"ScreenHandlerTypeMixin",
+  	"FeatureMixin",
+  	"DimensionTypeMixin",
+  	"EntityMixin",
+  	"ItemStackMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

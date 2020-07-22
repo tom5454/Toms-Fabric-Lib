@@ -1,0 +1,36 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.tom.fabriclibs.hooks.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  	"DedicatedServerMixin",
+  	"ServerWorldMixin",
+  	"PlayerManagerMixin",
+  	"ProjectileMixin",
+  	"ServerMixin",
+  	"PlayerEntityMixin",
+  	"ServerPlayerEntityMixin",
+  	"LivingEntityMixin",
+  	"ServerResourceManagerMixin",
+  	"AbstractFurnaceBlockEntityMixin",
+  	"ItemEntityMixin",
+  	"BlockItemMixin",
+  	"RepairItemRecipeMixin"
+  ],
+  "client": [
+  	"IntegratedServerMixin",
+  	"ClientWorldMixin",
+  	"BakedModelMixin",
+  	"BlockModelRendererMixin",
+  	"ClientPlayerInteractionManagerMixin",
+  	"GameRendererMixin",
+  	"BakedModelManagerMixin",
+  	"MinecraftMixin",
+  	"ItemRendererMixin",
+  	"ScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

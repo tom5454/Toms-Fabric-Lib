@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "tomsfabriclibs",
+  "version": "${version}",
+
+  "name": "Tom's Fabric Lib",
+  "description": "Library mod for my mods.",
+  "authors": [
+    "tom5454"
+  ],
+
+  "license": "MIT",
+  "icon": "assets/fabriclibs/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "preLaunch": [
+      "com.tom.fabriclibs.FabricLibs"
+    ],
+    "main": [
+      "com.tom.fabriclibs.FabricLibs"
+    ],
+    "client": [
+      "com.tom.fabriclibs.FabricLibsClient"
+    ]
+  },
+  "mixins": [
+    "fabriclibs.hooks.mixins.json",
+    "fabriclibs.reach.mixins.json",
+    "fabriclibs.render.mixins.json",
+    "fabriclibs.registry.mixins.json"
+  ],
+  "accessWidener" : "fabriclibs.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.7.4",
+    "fabric": "*"
+  },
+  "suggests": {
+    "flamingo": "*"
+  }
+}

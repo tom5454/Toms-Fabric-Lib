@@ -1,0 +1,29 @@
+accessWidener	v1	named
+accessible field net/minecraft/util/registry/Registry registryKey Lnet/minecraft/util/registry/RegistryKey;
+
+accessible method net/minecraft/screen/ScreenHandlerType <init> (Lnet/minecraft/screen/ScreenHandlerType$Factory;)V
+accessible class net/minecraft/screen/ScreenHandlerType$Factory
+
+accessible method net/minecraft/client/gui/screen/ingame/HandledScreens register (Lnet/minecraft/screen/ScreenHandlerType;Lnet/minecraft/client/gui/screen/ingame/HandledScreens$Provider;)V
+accessible class net/minecraft/client/gui/screen/ingame/HandledScreens$Provider
+
+accessible field net/minecraft/entity/attribute/DefaultAttributeRegistry DEFAULT_ATTRIBUTE_REGISTRY Ljava/util/Map;
+mutable field net/minecraft/entity/attribute/DefaultAttributeRegistry DEFAULT_ATTRIBUTE_REGISTRY Ljava/util/Map;
+
+accessible field net/minecraft/entity/attribute/DefaultAttributeContainer instances Ljava/util/Map;
+mutable field net/minecraft/entity/attribute/DefaultAttributeContainer instances Ljava/util/Map;
+
+extendable class net/minecraft/recipe/Ingredient
+accessible class net/minecraft/recipe/Ingredient$StackEntry
+accessible method net/minecraft/recipe/Ingredient <init> (Ljava/util/stream/Stream;)V
+accessible method net/minecraft/recipe/Ingredient$StackEntry <init> (Lnet/minecraft/item/ItemStack;)V
+
+accessible class net/minecraft/client/render/block/BlockModelRenderer$AmbientOcclusionCalculator
+
+accessible field net/minecraft/client/render/RenderLayers BLOCKS Ljava/util/Map;
+
+accessible field net/minecraft/recipe/RecipeManager recipes Ljava/util/Map;
+
+accessible field net/minecraft/resource/ReloadableResourceManagerImpl listeners Ljava/util/List;
+
+accessible field net/minecraft/util/registry/RegistryTracker$Modifiable registry Lnet/minecraft/util/registry/SimpleRegistry;
