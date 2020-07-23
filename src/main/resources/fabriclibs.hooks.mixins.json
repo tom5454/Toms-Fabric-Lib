@@ -23,7 +23,6 @@
   	"ClientWorldMixin",
   	"BakedModelMixin",
   	"BlockModelRendererMixin",
-  	"ClientPlayerInteractionManagerMixin",
   	"GameRendererMixin",
   	"BakedModelManagerMixin",
   	"MinecraftMixin",

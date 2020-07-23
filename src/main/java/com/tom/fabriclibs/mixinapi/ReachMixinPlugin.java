@@ -21,6 +21,8 @@ import org.objectweb.asm.tree.VarInsnNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+import net.fabricmc.loader.FabricLoader;
+
 public class ReachMixinPlugin implements IMixinConfigPlugin {
 
 	@Retention(RUNTIME)
@@ -42,7 +44,7 @@ public class ReachMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-		return true;
+		return !FabricLoader.INSTANCE.isModLoaded("reach-entity-attributes");
 	}
 
 	@Override
@@ -76,6 +78,7 @@ public class ReachMixinPlugin implements IMixinConfigPlugin {
 				if(method != null)break;
 			}
 		}
+		if(method == null)return;
 		Map<String, Object> anMap = new HashMap<>();
 		for (int i = 0; i < an.values.size(); i+=2) {
 			anMap.put((String) an.values.get(i), an.values.get(i+1));
