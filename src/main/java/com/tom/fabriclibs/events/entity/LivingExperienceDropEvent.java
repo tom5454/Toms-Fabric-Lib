@@ -17,6 +17,10 @@ public class LivingExperienceDropEvent extends EntityEvent {
 		this.originalExperiencePoints = this.droppedExperiencePoints = originalExperience;
 	}
 
+	public boolean isModified() {
+		return originalExperiencePoints != droppedExperiencePoints;
+	}
+
 	public int getDroppedExperience()
 	{
 		return droppedExperiencePoints;

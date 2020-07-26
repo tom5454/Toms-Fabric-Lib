@@ -4,25 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageTracker;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.stat.Stats;
-import net.minecraft.util.Hand;
-import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 
 import com.tom.fabriclibs.Events;
@@ -35,28 +31,8 @@ import com.tom.fabriclibs.ext.IEntity;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity implements IEntity {
 
-	@Shadow abstract boolean shouldAlwaysDropXp();
-	@Shadow abstract boolean canDropLootAndXp();
 	@Shadow abstract int getCurrentExperience(PlayerEntity e);
-	@Shadow abstract DamageTracker getDamageTracker();
-	@Shadow abstract void setHealth(float f);
-	@Shadow abstract void setAbsorptionAmount(float f);
-	@Shadow abstract float getAbsorptionAmount();
-	@Shadow abstract float applyEnchantmentsToDamage(DamageSource source, float amount);
-	@Shadow abstract float applyArmorToDamage(DamageSource source, float amount);
-	@Shadow abstract float getHealth();
-	@Shadow abstract ItemStack getStackInHand(Hand activeHand);
-	@Shadow abstract Hand getActiveHand();
-	@Shadow abstract int getItemUseTimeLeft();
-	@Shadow abstract void spawnConsumptionEffects(ItemStack activeItemStack2, int i);
-	@Shadow abstract boolean shouldSpawnConsumptionEffects();
-	@Shadow abstract void clearActiveItem();
-	@Shadow abstract void consumeItem();
-	@Shadow abstract boolean isUsingItem();
 
-	@Shadow int playerHitTimer;
-	@Shadow PlayerEntity attackingPlayer;
-	@Shadow ItemStack activeItemStack;
 	@Shadow int itemUseTimeLeft;
 
 	public LivingEntityMixin(EntityType<?> type, World world) {
@@ -78,74 +54,39 @@ public abstract class LivingEntityMixin extends Entity implements IEntity {
 		}
 	}
 
-	@Overwrite
-	public void dropXp() {
-		if (!this.world.isClient && (shouldAlwaysDropXp() || (this.playerHitTimer > 0 && canDropLootAndXp() && this.world.getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)))) {
-			int i = getCurrentExperience(this.attackingPlayer);
-			LivingExperienceDropEvent evt = new LivingExperienceDropEvent((LivingEntity) (Object) this, attackingPlayer, i);
-			Events.EVENT_BUS.post(evt);
-			if(evt.isCanceled())return;
-			i = evt.getDroppedExperience();
-			while (i > 0) {
-				int j = ExperienceOrbEntity.roundToOrbSize(i);
-				i -= j;
-				this.world.spawnEntity(new ExperienceOrbEntity(this.world, getX(), getY(), getZ(), j));
-			}
-		}
+	@Redirect(method = "dropXp()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getCurrentExperience(Lnet/minecraft/entity/player/PlayerEntity;)I"))
+	public int onGetXP(LivingEntity this$0, PlayerEntity e) {
+		LivingExperienceDropEvent evt = new LivingExperienceDropEvent((LivingEntity) (Object) this, e, getCurrentExperience(e));
+		Events.EVENT_BUS.post(evt);
+		if(evt.isCanceled())return 0;
+		return evt.getDroppedExperience();
 	}
 
-	@Overwrite
-	public void applyDamage(DamageSource source, float amount) {
-		if (isInvulnerableTo(source)) {
-			return;
-		}
+	@Inject(method = "applyDamage(Lnet/minecraft/entity/damage/DamageSource;F)V", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/entity/LivingEntity;applyArmorToDamage(Lnet/minecraft/entity/damage/DamageSource;F)F"), cancellable = true)
+	public void onApplyDamage(DamageSource source, float amount, CallbackInfo cbi) {
+		if (amount <= 0)cbi.cancel();
+	}
+
+	@ModifyArg(method = "applyDamage(Lnet/minecraft/entity/damage/DamageSource;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyArmorToDamage(Lnet/minecraft/entity/damage/DamageSource;F)F"))
+	public float onApplyDamageGetAmount(DamageSource source, float amount) {
 		LivingHurtEvent evt = new LivingHurtEvent((LivingEntity) (Object) this, source, amount);
 		Events.EVENT_BUS.post(evt);
 		amount = evt.getAmount();
-		if (amount <= 0) return;
-
-		amount = applyArmorToDamage(source, amount);
-		amount = applyEnchantmentsToDamage(source, amount);
-
-		float f = amount;
-		amount = Math.max(amount - getAbsorptionAmount(), 0.0F);
-		setAbsorptionAmount(getAbsorptionAmount() - f - amount);
-
-		float g = f - amount;
-		if (g > 0.0F && g < 3.4028235E37F && source.getAttacker() instanceof ServerPlayerEntity) {
-			((ServerPlayerEntity)source.getAttacker()).increaseStat(Stats.DAMAGE_DEALT_ABSORBED, Math.round(g * 10.0F));
-		}
-
-		if (amount == 0.0F) {
-			return;
-		}
-
-		float h = getHealth();
-		setHealth(h - amount);
-		getDamageTracker().onDamage(source, h, amount);
-		setAbsorptionAmount(getAbsorptionAmount() - amount);
+		if (amount <= 0)return 0;
+		else return amount;
 	}
 
-	@Overwrite
-	private void tickActiveItemStack() {
-		if (isUsingItem())
-		{
-			if (ItemStack.areItemsEqual(getStackInHand(getActiveHand()), this.activeItemStack)) {
-				this.activeItemStack = getStackInHand(getActiveHand());
-				LivingEntityUseItemTickEvent evt = new LivingEntityUseItemTickEvent((LivingEntity) (Object) this, activeItemStack, itemUseTimeLeft);
-				Events.EVENT_BUS.post(evt);
-				itemUseTimeLeft = evt.getDuration();
-				if(itemUseTimeLeft > 0)
-					this.activeItemStack.usageTick(this.world, (LivingEntity) (Object) this, getItemUseTimeLeft());
-				if (shouldSpawnConsumptionEffects()) {
-					spawnConsumptionEffects(this.activeItemStack, 5);
-				}
-				if (--this.itemUseTimeLeft == 0 && !this.world.isClient && !this.activeItemStack.isUsedOnRelease()) {
-					consumeItem();
-				}
-			} else {
-				clearActiveItem();
-			}
-		}
+	@Inject(method = "applyArmorToDamage(Lnet/minecraft/entity/damage/DamageSource;F)F", at = @At("HEAD"), cancellable = true)
+	public void onApplyArmorToDamage(DamageSource source, float amount, CallbackInfoReturnable<Float> cbi) {
+		if(amount <= 0)cbi.setReturnValue(0f);
+	}
+
+	@Redirect(method = "tickActiveItemStack()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;usageTick(Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;I)V"))
+	public void onTickActiveItemStack(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
+		LivingEntityUseItemTickEvent evt = new LivingEntityUseItemTickEvent(user, stack, itemUseTimeLeft);
+		Events.EVENT_BUS.post(evt);
+		itemUseTimeLeft = evt.getDuration();
+		if(itemUseTimeLeft > 0)
+			stack.usageTick(world, user, remainingUseTicks);
 	}
 }

@@ -3,12 +3,12 @@ package com.tom.fabriclibs.registry.mixin;
 import java.util.List;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
@@ -56,7 +56,7 @@ public abstract class EntityMixin implements IEntity {
 		return ret;
 	}
 
-	@Overwrite
+	/*@Overwrite
 	public ItemEntity dropStack(ItemStack stack, float yOffset) {
 		if (stack.isEmpty()) {
 			return null;
@@ -73,5 +73,13 @@ public abstract class EntityMixin implements IEntity {
 		}
 		this.world.spawnEntity(itemEntity);
 		return itemEntity;
+	}*/
+
+	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;spawnEntity(Lnet/minecraft/entity/Entity;)Z"), method = "dropStack(Lnet/minecraft/item/ItemStack;F)Lnet/minecraft/entity/ItemEntity;", locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
+	public void onDropStack(ItemStack stack, float yOffset, CallbackInfoReturnable<ItemEntity> cbi, ItemEntity itemEntity) {
+		if(lib$captureDrops != null) {
+			lib$captureDrops.add(itemEntity);
+			cbi.setReturnValue(itemEntity);
+		}
 	}
 }

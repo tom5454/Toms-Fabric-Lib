@@ -5,7 +5,6 @@ import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,19 +12,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.MutableWorldProperties;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.Spawner;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
@@ -53,36 +47,13 @@ public abstract class ServerWorldMixin extends World {
 		Events.EVENT_BUS.post(new WorldStartEvent(this));
 	}
 
-	/*@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;"), method = "addEntity(Lnet/minecraft/entity/Entity;)Z", require = 1, cancellable = true)
-	public void onAddEntity(Entity ent, CallbackInfoReturnable<Boolean> cbi) {
-		EntityJoinWorldEvent evt = new EntityJoinWorldEvent(ent, this);
+	@Inject(method = "addEntity(Lnet/minecraft/entity/Entity;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/Chunk;"), cancellable = true)
+	public void onAddEntity(Entity entity, CallbackInfoReturnable<Boolean> cbi) {
+		EntityJoinWorldEvent evt = new EntityJoinWorldEvent(entity, this);
 		Events.EVENT_BUS.post(evt);
 		if(evt.isCanceled()) {
 			cbi.setReturnValue(false);
 		}
-	}*/
-
-	@Overwrite
-	private boolean addEntity(Entity entity) {
-		if (entity.removed) {
-			LOGGER.warn("Tried to add entity {} but it was marked as removed already", EntityType.getId(entity.getType()));
-			return false;
-		}
-		if (checkUuid(entity)) {
-			return false;
-		}
-		EntityJoinWorldEvent evt = new EntityJoinWorldEvent(entity, this);
-		Events.EVENT_BUS.post(evt);
-		if(evt.isCanceled()) {
-			return false;
-		}
-		Chunk chunk = getChunk(MathHelper.floor(entity.getX() / 16.0D), MathHelper.floor(entity.getZ() / 16.0D), ChunkStatus.FULL, entity.teleporting);
-		if (!(chunk instanceof WorldChunk)) {
-			return false;
-		}
-		chunk.addEntity(entity);
-		loadEntityUnchecked(entity);
-		return true;
 	}
 
 	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;loadEntityUnchecked(Lnet/minecraft/entity/Entity;)V"), method = "loadEntity(Lnet/minecraft/entity/Entity;)Z", require = 1, cancellable = true)

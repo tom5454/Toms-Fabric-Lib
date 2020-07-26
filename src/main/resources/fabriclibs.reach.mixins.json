@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
   	"ServerPlayerInteractionManagerMixin",
-  	"ServerPlayNetworkHandlerMixin"
+  	"ServerPlayNetworkHandlerMixin",
+  	"ItemMixin"
   ],
   "plugin": "com.tom.fabriclibs.mixinapi.ReachMixinPlugin",
   "client": [

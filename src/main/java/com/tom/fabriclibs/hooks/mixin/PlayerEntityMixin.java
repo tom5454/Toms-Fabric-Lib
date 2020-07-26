@@ -56,6 +56,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
 	@Shadow public PlayerInventory inventory;
 
+	//TODO find a way to do this with injections
 	@Overwrite
 	public void attack(Entity target) {
 		float h;
@@ -100,8 +101,9 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
 			bl3 = (bl3 && !isSprinting());
 
-			CriticalHitEvent hitResult = Hooks.getCriticalHit((PlayerEntity)(Object)this, target, bl3, bl3 ? 1.5F : 1.0F);
-			bl3 = hitResult != null;
+			CriticalHitEvent hitResult = Hooks.getCriticalHit((PlayerEntity)(Object)this, target, bl3, bl3 ? 1.5F : 1.0F);//
+			bl3 = hitResult != null;//
+
 			if (bl3) {
 				f *= hitResult.getDamageModifier();
 			}
@@ -243,8 +245,8 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 		cbi.setReturnValue(Hooks.getBreakSpeed((PlayerEntity)(Object)this, state, f));
 	}
 
-	@Overwrite
-	public boolean isUsingEffectiveTool(BlockState state) {
-		return Hooks.doPlayerHarvestCheck((PlayerEntity)(Object)this, state, !state.isToolRequired() || this.inventory.getMainHandStack().isEffectiveOn(state));
+	@Inject(method = "isUsingEffectiveTool(Lnet/minecraft/block/BlockState;)Z", at = @At("RETURN"), cancellable = true)
+	public void onIsUsingEffectiveTool(BlockState state, CallbackInfoReturnable<Boolean> cbi) {
+		cbi.setReturnValue(Hooks.doPlayerHarvestCheck((PlayerEntity)(Object)this, state, cbi.getReturnValueZ()));
 	}
 }
